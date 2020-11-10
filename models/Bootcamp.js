@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
+const geocoder = require('../utils/geocoder');
 
 const BootcampSchema = mongoose.Schema({
   name: {
@@ -11,7 +13,7 @@ const BootcampSchema = mongoose.Schema({
   slug: String,
   description: {
     type: String,
-    required: [true, 'Pleas add a description'],
+    required: [true, 'Please add a description'],
     maxLength: [500, 'Description can not be more than 500 characters']
   },
   website: {
@@ -89,5 +91,30 @@ const BootcampSchema = mongoose.Schema({
     default: Date.now
   }
 });
+
+// Geocoder & Location Fields
+BootcampSchema.pre('save', async function(next) {
+  const loc = await geocoder.geocode(this.address);
+  this.location = {
+    type: 'Point',
+    coordinates: [loc[0].longitude, loc[0].latitude],
+    formattedAddress: loc[0].formattedAddress,
+    street: loc[0].streetName,
+    city: loc[0].city,
+    state: loc[0].stateCode,
+    zipcode: loc[0].zipcode,
+    country: loc[0].countryCode
+  }
+  //! Não salvar o endereço no DB
+  //* Assim nem vai para o DB
+  this.address = undefined
+  next();
+})
+
+// Não pode ser arrow Function (por causa do this)
+BootcampSchema.pre('save', function(next) {
+  this.slug = slugify(this.name, {lower: true});
+  next();
+})
 
 module.exports = mongoose.model('Bootcamp', BootcampSchema);

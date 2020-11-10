@@ -2,6 +2,8 @@ const express = require('express');
 const dotenv = require('dotenv');
 const bootcamps = require('./routes/bootcamps');
 const morgan = require('morgan');
+const colors = require('colors')
+const errorHandler = require('./middleware/error');
 const connectDB = require('./config/db');
 
 dotenv.config({path: './config/config.env'});
@@ -18,16 +20,17 @@ app.use(express.json());
 
 app.use('/api/v1/bootcamps', bootcamps);
 
+app.use(errorHandler);
+
+
 const PORT = process.env.PORT || 5000;
-
-
 const server = app.listen(PORT, 
-  console.log(`Server runing in ${process.env.NODE_ENV} mode on port ${PORT}`) 
+  console.log(`Server runing in ${process.env.NODE_ENV} mode on port ${PORT}`.yellow) 
 );
 
 // Handle unhandled rejections
 process.on('unhandledRejection', (err, promise) => {
-  console.log(`ERROR: ${err.message}`);
+  console.log(`ERROR: ${err.message}`.red);
   // close server
   server.close(() => process.exit(1))
 })
