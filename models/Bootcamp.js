@@ -90,6 +90,9 @@ const BootcampSchema = mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  toJSON: {virtuals: true},
+  toObject: {virtuals: true}
 });
 
 // Geocoder & Location Fields
@@ -115,6 +118,23 @@ BootcampSchema.pre('save', async function(next) {
 BootcampSchema.pre('save', function(next) {
   this.slug = slugify(this.name, {lower: true});
   next();
+})
+
+BootcampSchema.pre('remove', async function(next) {
+  console.log(`Courses being removed from bootcamp ${this._id}`);
+  await this.model('Course').deleteMany({bootcamp: this._id});
+  // Colocar o remove no controller do bootcamp, nao usar findByIdAndDelete
+  // Senão o evento nao acontece no middleware
+  // Depois usar o bootcamp.delete(),
+  next();
+})
+
+// Revese populate with courses
+BootcampSchema.virtual('courses', {
+  ref: 'Course',
+  localField: '_id', // esse esquema
+  foreignField: 'bootcamp', // no esquema do courses
+  justOne: false
 })
 
 module.exports = mongoose.model('Bootcamp', BootcampSchema);
