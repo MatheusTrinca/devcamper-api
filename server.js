@@ -2,12 +2,14 @@ const express = require('express');
 const dotenv = require('dotenv');
 const bootcamps = require('./routes/bootcamps');
 const courses = require('./routes/courses');
+const auth = require('./routes/auth')
 const morgan = require('morgan');
 const colors = require('colors')
 const errorHandler = require('./middleware/error');
 const connectDB = require('./config/db');
 const fileUpload = require('express-fileupload');
 const path = require('path');
+const cookieParser = require('cookie-parser')
 
 dotenv.config({path: './config/config.env'});
 
@@ -25,8 +27,11 @@ app.use(express.json());
 
 app.use(fileUpload());
 
+app.use(cookieParser())
+
 app.use('/api/v1/bootcamps', bootcamps);
 app.use('/api/v1/courses', courses)
+app.use('/api/v1/auth', auth)
 
 app.use(errorHandler);
 
